@@ -1,7 +1,15 @@
 const SUPABASE_URL = "https://qtdmojmizwncsmdspbgk.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZG1vam1penduY3NtZHNwYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU2ODcyNzcsImV4cCI6MjAyMTI2MzI3N30.XVcYZ50zyYUh4uHdGcBZaP0fumIt9vF58K_D4_G8sk4";
 
+const ALLOWED_URLS = [
+  "https://www.murrayjeepram.ca/how-to-blog/",
+];
+
 (function () {
+  var current = String(window.location.href || "").toLowerCase().trim().replace(/\/$/, "");
+  var allowed = ALLOWED_URLS.map(function (u) { return String(u).toLowerCase().trim().replace(/\/$/, ""); });
+  if (allowed.indexOf(current) === -1) return;
+
   function pushDL(payload) {
 	window.dataLayer = window.dataLayer || [];
 	window.dataLayer.push(payload);
