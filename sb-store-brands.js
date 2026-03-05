@@ -8,6 +8,7 @@ const ALLOWED_URLS = [
 ];
 
 (function () {
+  console.log("[sb-store-brands] Script started");
   var current = String(window.location.href || "")
     .toLowerCase()
     .trim()
@@ -15,7 +16,13 @@ const ALLOWED_URLS = [
   var allowed = ALLOWED_URLS.map(function (u) {
     return String(u).toLowerCase().trim().replace(/\/$/, "");
   });
-  if (allowed.indexOf(current) === -1) return;
+  console.log("[sb-store-brands] Current URL:", current);
+  console.log("[sb-store-brands] Allowed URLs:", allowed);
+  if (allowed.indexOf(current) === -1) {
+    console.log("[sb-store-brands] URL not in allowed list, exiting");
+    return;
+  }
+  console.log("[sb-store-brands] URL is allowed, proceeding");
 
   function pushDL(payload) {
     window.dataLayer = window.dataLayer || [];
@@ -26,13 +33,26 @@ const ALLOWED_URLS = [
   var INJECT_TIMEOUT_MS = 10000;
 
   function injectContent(html) {
-    if (!html) return;
+    console.log(
+      "[sb-store-brands] injectContent called with html length:",
+      html ? html.length : 0,
+    );
+    if (!html) {
+      console.log("[sb-store-brands] No html to inject");
+      return;
+    }
 
     var container = document.querySelector(INJECT_SELECTOR);
     if (container) {
+      console.log(
+        "[sb-store-brands] Container found immediately, injecting content",
+      );
       container.innerHTML = html;
       return;
     }
+    console.log(
+      "[sb-store-brands] Container not found, setting up MutationObserver",
+    );
     var resolved = false;
     var timer = setTimeout(function () {
       if (resolved) return;
@@ -44,6 +64,9 @@ const ALLOWED_URLS = [
       if (resolved) return;
       var el = document.querySelector(INJECT_SELECTOR);
       if (el) {
+        console.log(
+          "[sb-store-brands] Container found via MutationObserver, injecting content",
+        );
         resolved = true;
         clearTimeout(timer);
         observer.disconnect();
@@ -278,6 +301,7 @@ const ALLOWED_URLS = [
     var host = window.location.hostname || "";
     host = String(host).toLowerCase().trim().split(":")[0];
     if (host.indexOf("www.") === 0) host = host.slice(4);
+    console.log("[sb-store-brands] Extracted hostname:", host);
     return host;
   })();
 
@@ -292,7 +316,10 @@ const ALLOWED_URLS = [
 
   var incomingHref = String(window.location.href || "");
 
+  console.log("[sb-store-brands] Looking up store data for:", hostNoWww);
+
   if (!hostNoWww) {
+    console.log("[sb-store-brands] Error: Missing hostname");
     pushDL({
       event: "sb_store_brands_loaded",
       sb_incoming_href: incomingHref || null,
@@ -304,7 +331,10 @@ const ALLOWED_URLS = [
 
   var row = searchStore(hostNoWww);
 
+  console.log("[sb-store-brands] Store lookup result:", row);
+
   if (!row) {
+    console.log("[sb-store-brands] Error: No matching store found");
     pushDL({
       event: "sb_store_brands_loaded",
       sb_incoming_href: incomingHref,
@@ -324,7 +354,13 @@ const ALLOWED_URLS = [
       ? [String(brandsRaw)]
       : [];
 
+  console.log("[sb-store-brands] Found brands:", brands);
+
   function done(htmlConcatenated) {
+    console.log(
+      "[sb-store-brands] Done function called with html length:",
+      htmlConcatenated ? htmlConcatenated.length : 0,
+    );
     pushDL({
       event: "sb_store_brands_loaded",
       sb_incoming_href: incomingHref,
@@ -340,25 +376,35 @@ const ALLOWED_URLS = [
   }
 
   if (brands.length === 0) {
+    console.log("[sb-store-brands] No brands to fetch, completing");
     done("");
     return;
   }
 
+  console.log("[sb-store-brands] Loading Supabase client");
+
   function loadSupabase(cb) {
-    if (window.supabase && window.supabase.createClient) return cb(null);
+    if (window.supabase && window.supabase.createClient) {
+      console.log("[sb-store-brands] Supabase already loaded");
+      return cb(null);
+    }
+    console.log("[sb-store-brands] Loading Supabase script");
     var s = document.createElement("script");
     s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
     s.async = true;
     s.onload = function () {
+      console.log("[sb-store-brands] Supabase script loaded successfully");
       cb(null);
     };
     s.onerror = function () {
+      console.log("[sb-store-brands] Failed to load Supabase script");
       cb(new Error("Failed to load supabase-js"));
     };
     document.head.appendChild(s);
   }
 
   function fetchHtmlForBrands(client, brandList, cb) {
+    console.log("[sb-store-brands] Fetching HTML for brands:", brandList);
     if (!brandList || brandList.length === 0) return cb(null, "");
     function processRes(res, cb2) {
       if (res && res.error) {
@@ -377,6 +423,10 @@ const ALLOWED_URLS = [
           return makeToHtml[m] || "";
         })
         .join("");
+      console.log(
+        "[sb-store-brands] HTML fetched and concatenated, length:",
+        htmlStr.length,
+      );
       cb2(null, htmlStr);
     }
     client
@@ -395,6 +445,7 @@ const ALLOWED_URLS = [
 
   loadSupabase(function (err) {
     if (err) {
+      console.log("[sb-store-brands] Error loading Supabase:", err);
       console.warn("[GTM][Brands] loadSupabase:", err);
       pushDL({
         event: "sb_store_brands_loaded",
@@ -410,9 +461,11 @@ const ALLOWED_URLS = [
       });
       return;
     }
+    console.log("[sb-store-brands] Creating Supabase client");
     var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     fetchHtmlForBrands(client, brands, function (qerr, htmlStr) {
       if (qerr) {
+        console.log("[sb-store-brands] Error fetching HTML:", qerr);
         console.warn("[GTM][Brands] fetch:", qerr);
         pushDL({
           event: "sb_store_brands_loaded",
@@ -428,6 +481,7 @@ const ALLOWED_URLS = [
         });
         return;
       }
+      console.log("[sb-store-brands] Successfully fetched HTML, calling done");
       done(htmlStr || "");
     });
   });
