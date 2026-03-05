@@ -1,0 +1,189 @@
+(function () {
+  console.log("[GTM][Supabase] Tag started");
+
+  function getParam(name) {
+    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : null;
+  }
+
+  function loadSupabase(cb) {
+    if (window.supabase && window.supabase.createClient) {
+      console.log("[GTM][Supabase] supabase-js already present");
+      return cb(null);
+    }
+    console.log("[GTM][Supabase] Loading supabase-js...");
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    s.async = true;
+    s.onload = function () {
+      console.log("[GTM][Supabase] supabase-js loaded");
+      cb(null);
+    };
+    s.onerror = function () {
+      cb(new Error("Failed to load supabase-js"));
+    };
+    document.head.appendChild(s);
+  }
+
+  function injectTitle(title) {
+    if (!title) return;
+
+    var titleSelectors = [".page-title h1 span", ".page__title"];
+    var titleElement = null;
+    var usedSelector = null;
+
+    for (var i = 0; i < titleSelectors.length; i++) {
+      titleElement = document.querySelector(titleSelectors[i]);
+      if (titleElement) {
+        usedSelector = titleSelectors[i];
+        console.log(
+          "[GTM][Supabase] Title element found with selector:",
+          usedSelector,
+        );
+        break;
+      }
+    }
+
+    if (titleElement) {
+      console.log("[GTM][Supabase] Updating title block");
+      titleElement.textContent = title;
+    } else {
+      console.log(
+        "[GTM][Supabase] Title element not found. Tried selectors:",
+        titleSelectors.join(", "),
+      );
+    }
+
+    // Update browser tab title as well
+    document.title = title;
+  }
+
+  function injectContent(html) {
+    if (!html) return;
+
+    var selectors = [".primary-wrapper .primary.col", ".page__content"];
+    var container = null;
+    var usedSelector = null;
+
+    for (var i = 0; i < selectors.length; i++) {
+      container = document.querySelector(selectors[i]);
+      if (container) {
+        usedSelector = selectors[i];
+        console.log(
+          "[GTM][Supabase] Container found with selector:",
+          usedSelector,
+        );
+        break;
+      }
+    }
+
+    if (container) {
+      console.log("[GTM][Supabase] Injecting HTML content");
+      container.innerHTML = html;
+    } else {
+      console.log(
+        "[GTM][Supabase] Content container not found. Tried selectors:",
+        selectors.join(", "),
+      );
+    }
+  }
+
+  function pushDL(payload) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(payload);
+    console.log("[GTM][Supabase] dataLayer push:", payload);
+  }
+
+  var slug = getParam("slug");
+  console.log("[GTM][Supabase] slug:", slug);
+
+  if (!slug) {
+    pushDL({
+      event: "sb_seo_loaded",
+      sb_slug: null,
+      sb_found: false,
+      sb_error: "Missing slug param",
+    });
+    return;
+  }
+
+  loadSupabase(function (err) {
+    if (err) {
+      console.log("[GTM][Supabase] load error:", err);
+      pushDL({
+        event: "sb_seo_loaded",
+        sb_slug: slug,
+        sb_found: false,
+        sb_error: String(err),
+      });
+      return;
+    }
+
+    try {
+      console.log("[GTM][Supabase] Creating client");
+      var client = window.supabase.createClient(
+        "{{SUPABASE_URL}}",
+        "{{SUPABASE_ANON_KEY}}",
+      );
+
+      console.log("[GTM][Supabase] Querying crm.seo_pages for slug:", slug);
+
+      client
+        .schema("crm")
+        .from("seo_pages")
+        .select("title, html")
+        .eq("slug", slug)
+        .maybeSingle()
+        .then(function (res) {
+          console.log("[GTM][Supabase] query response:", res);
+
+          var row = res && res.data ? res.data : null;
+          var qerr = res && res.error ? res.error : null;
+
+          if (qerr || !row) {
+            pushDL({
+              event: "sb_seo_loaded",
+              sb_slug: slug,
+              sb_found: false,
+              sb_error: qerr ? String(qerr.message || qerr) : "No matching row",
+            });
+            return;
+          }
+
+          // Inject into the specific blocks you asked for
+          // (Some themes render late; a tiny delay makes it more reliable.)
+          setTimeout(function () {
+            injectTitle(row.title);
+            injectContent(row.html);
+          }, 50);
+
+          // Push to dataLayer for other tags
+          pushDL({
+            event: "sb_seo_loaded",
+            sb_slug: slug,
+            sb_found: true,
+            sb_title: row.title || null,
+          });
+
+          console.log("[GTM][Supabase] SEO content injected");
+        })
+        .catch(function (e) {
+          console.log("[GTM][Supabase] query exception:", e);
+          pushDL({
+            event: "sb_seo_loaded",
+            sb_slug: slug,
+            sb_found: false,
+            sb_error: String(e),
+          });
+        });
+    } catch (e2) {
+      console.log("[GTM][Supabase] Exception:", e2);
+      pushDL({
+        event: "sb_seo_loaded",
+        sb_slug: slug,
+        sb_found: false,
+        sb_error: String(e2),
+      });
+    }
+  });
+})();
