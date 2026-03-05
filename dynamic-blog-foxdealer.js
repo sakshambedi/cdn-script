@@ -1,5 +1,5 @@
 (function () {
-  console.log("[GTM][Supabase] Tag started");
+  console.log("[dyn-blog][init] Tag started");
 
   function getParam(name) {
     var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
@@ -8,15 +8,15 @@
 
   function loadSupabase(cb) {
     if (window.supabase && window.supabase.createClient) {
-      console.log("[GTM][Supabase] supabase-js already present");
+      console.log("[dyn-blog][load-supabase] supabase-js already present");
       return cb(null);
     }
-    console.log("[GTM][Supabase] Loading supabase-js...");
+    console.log("[dyn-blog][load-supabase] Loading supabase-js...");
     var s = document.createElement("script");
     s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
     s.async = true;
     s.onload = function () {
-      console.log("[GTM][Supabase] supabase-js loaded");
+      console.log("[dyn-blog][load-supabase] supabase-js loaded");
       cb(null);
     };
     s.onerror = function () {
@@ -37,7 +37,7 @@
       if (titleElement) {
         usedSelector = titleSelectors[i];
         console.log(
-          "[GTM][Supabase] Title element found with selector:",
+          "[dyn-blog][inject-title] Title element found with selector:",
           usedSelector,
         );
         break;
@@ -45,11 +45,11 @@
     }
 
     if (titleElement) {
-      console.log("[GTM][Supabase] Updating title block");
+      console.log("[dyn-blog][inject-title] Updating title block");
       titleElement.textContent = title;
     } else {
       console.log(
-        "[GTM][Supabase] Title element not found. Tried selectors:",
+        "[dyn-blog][inject-title] Title element not found. Tried selectors:",
         titleSelectors.join(", "),
       );
     }
@@ -70,7 +70,7 @@
       if (container) {
         usedSelector = selectors[i];
         console.log(
-          "[GTM][Supabase] Container found with selector:",
+          "[dyn-blog][inject-content] Container found with selector:",
           usedSelector,
         );
         break;
@@ -78,11 +78,11 @@
     }
 
     if (container) {
-      console.log("[GTM][Supabase] Injecting HTML content");
+      console.log("[dyn-blog][inject-content] Injecting HTML content");
       container.innerHTML = html;
     } else {
       console.log(
-        "[GTM][Supabase] Content container not found. Tried selectors:",
+        "[dyn-blog][inject-content] Content container not found. Tried selectors:",
         selectors.join(", "),
       );
     }
@@ -91,11 +91,11 @@
   function pushDL(payload) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(payload);
-    console.log("[GTM][Supabase] dataLayer push:", payload);
+    console.log("[dyn-blog][data-layer] dataLayer push:", payload);
   }
 
   var slug = getParam("slug");
-  console.log("[GTM][Supabase] slug:", slug);
+  console.log("[dyn-blog][init] slug:", slug);
 
   if (!slug) {
     pushDL({
@@ -109,7 +109,7 @@
 
   loadSupabase(function (err) {
     if (err) {
-      console.log("[GTM][Supabase] load error:", err);
+      console.log("[dyn-blog][load-supabase] load error:", err);
       pushDL({
         event: "sb_seo_loaded",
         sb_slug: slug,
@@ -120,13 +120,13 @@
     }
 
     try {
-      console.log("[GTM][Supabase] Creating client");
+      console.log("[dyn-blog][supabase-client] Creating client");
       var client = window.supabase.createClient(
         "{{SUPABASE_URL}}",
         "{{SUPABASE_ANON_KEY}}",
       );
 
-      console.log("[GTM][Supabase] Querying crm.seo_pages for slug:", slug);
+      console.log("[dyn-blog][query] Querying crm.seo_pages for slug:", slug);
 
       client
         .schema("crm")
@@ -135,7 +135,7 @@
         .eq("slug", slug)
         .maybeSingle()
         .then(function (res) {
-          console.log("[GTM][Supabase] query response:", res);
+          console.log("[dyn-blog][query] query response:", res);
 
           var row = res && res.data ? res.data : null;
           var qerr = res && res.error ? res.error : null;
@@ -165,10 +165,10 @@
             sb_title: row.title || null,
           });
 
-          console.log("[GTM][Supabase] SEO content injected");
+          console.log("[dyn-blog][complete] SEO content injected");
         })
         .catch(function (e) {
-          console.log("[GTM][Supabase] query exception:", e);
+          console.log("[dyn-blog][query] query exception:", e);
           pushDL({
             event: "sb_seo_loaded",
             sb_slug: slug,
@@ -177,7 +177,7 @@
           });
         });
     } catch (e2) {
-      console.log("[GTM][Supabase] Exception:", e2);
+      console.log("[dyn-blog][error] Exception:", e2);
       pushDL({
         event: "sb_seo_loaded",
         sb_slug: slug,
