@@ -29,7 +29,7 @@ const ALLOWED_URLS = [
     window.dataLayer.push(payload);
   }
 
-  var INJECT_SELECTOR = ".primary-wrapper .primary.col";
+  var INJECT_SELECTORS = [".primary-wrapper .primary.col", ".page__content"];
   var INJECT_TIMEOUT_MS = 10000;
 
   function injectContent(html) {
@@ -42,11 +42,20 @@ const ALLOWED_URLS = [
       return;
     }
 
-    var container = document.querySelector(INJECT_SELECTOR);
+    var container = null;
+    for (var i = 0; i < INJECT_SELECTORS.length; i++) {
+      container = document.querySelector(INJECT_SELECTORS[i]);
+      if (container) {
+        console.log(
+          "[sb-store-brands] Container found immediately with selector:",
+          INJECT_SELECTORS[i],
+        );
+        break;
+      }
+    }
+
     if (container) {
-      console.log(
-        "[sb-store-brands] Container found immediately, injecting content",
-      );
+      console.log("[sb-store-brands] Injecting content");
       container.innerHTML = html;
       return;
     }
@@ -62,15 +71,20 @@ const ALLOWED_URLS = [
 
     var observer = new MutationObserver(function () {
       if (resolved) return;
-      var el = document.querySelector(INJECT_SELECTOR);
-      if (el) {
-        console.log(
-          "[sb-store-brands] Container found via MutationObserver, injecting content",
-        );
-        resolved = true;
-        clearTimeout(timer);
-        observer.disconnect();
-        el.innerHTML = html;
+      var el = null;
+      for (var i = 0; i < INJECT_SELECTORS.length; i++) {
+        el = document.querySelector(INJECT_SELECTORS[i]);
+        if (el) {
+          console.log(
+            "[sb-store-brands] Container found via MutationObserver with selector:",
+            INJECT_SELECTORS[i],
+          );
+          resolved = true;
+          clearTimeout(timer);
+          observer.disconnect();
+          el.innerHTML = html;
+          return;
+        }
       }
     });
 
