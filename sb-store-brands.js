@@ -5,21 +5,39 @@ const SUPABASE_ANON_KEY =
 const ALLOWED_URLS = [
   "https://www.murrayjeepram.ca/how-to-blog/",
   "https://www.murraychevrolet.ca/how-to-blog/",
-  "https://murraychevrolet.foxdealersites.com/how-to-blog",
+  "https://murraychevrolet.foxdealersites.com/how-to-blog/*",
 ];
 
 (function () {
-  console.log("[sb-store-brands] Script started!");
+  console.log("[sb-store-brands] Script started");
   var current = String(window.location.href || "")
     .toLowerCase()
-    .trim()
-    .replace(/\/$/, "");
-  var allowed = ALLOWED_URLS.map(function (u) {
-    return String(u).toLowerCase().trim().replace(/\/$/, "");
+    .trim();
+
+  // Remove trailing slash from current URL for comparison
+  var currentPath = current.replace(/\/$/, "");
+
+  // Check if current URL matches any allowed pattern
+  var isAllowed = ALLOWED_URLS.some(function (pattern) {
+    var normalizedPattern = String(pattern)
+      .toLowerCase()
+      .trim()
+      .replace(/\/$/, "");
+
+    // Check for wildcard pattern
+    if (normalizedPattern.indexOf("/*") !== -1) {
+      var baseUrl = normalizedPattern.replace("/*", "");
+      return currentPath.indexOf(baseUrl) === 0;
+    }
+
+    // Exact match
+    return currentPath === normalizedPattern;
   });
+
   console.log("[sb-store-brands] Current URL:", current);
-  console.log("[sb-store-brands] Allowed URLs:", allowed);
-  if (allowed.indexOf(current) === -1) {
+  console.log("[sb-store-brands] Allowed URLs:", ALLOWED_URLS);
+
+  if (!isAllowed) {
     console.log("[sb-store-brands] URL not in allowed list, exiting");
     return;
   }
