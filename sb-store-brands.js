@@ -1,12 +1,6 @@
-export async function onRequest(context) {
-  const { env } = context;
-
-  // Get environment variables
-  const SUPABASE_URL = env.SUPABASE_URL || "https://qtdmojmizwncsmdspbgk.supabase.co";
-  const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZG1vam1penduY3NtZHNwYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU2ODcyNzcsImV4cCI6MjAyMTI2MzI3N30.XVcYZ50zyYUh4uHdGcBZaP0fumIt9vF58K_D4_G8sk4";
-
-  const script = `const SUPABASE_URL = "${SUPABASE_URL}";
-const SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
+const SUPABASE_URL = "https://qtdmojmizwncsmdspbgk.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZG1vam1penduY3NtZHNwYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU2ODcyNzcsImV4cCI6MjAyMTI2MzI3N30.XVcYZ50zyYUh4uHdGcBZaP0fumIt9vF58K_D4_G8sk4";
 
 const ALLOWED_URLS = [
   "https://www.murrayjeepram.ca/how-to-blog/",
@@ -21,14 +15,14 @@ const ALLOWED_URLS = [
     .trim();
 
   // Remove trailing slash from current URL for comparison
-  var currentPath = current.replace(/\\/$/, "");
+  var currentPath = current.replace(/\/$/, "");
 
   // Check if current URL matches any allowed pattern
   var isAllowed = ALLOWED_URLS.some(function (pattern) {
     var normalizedPattern = String(pattern)
       .toLowerCase()
       .trim()
-      .replace(/\\/$/, "");
+      .replace(/\/$/, "");
 
     // Check for wildcard pattern
     if (normalizedPattern.indexOf("/*") !== -1) {
@@ -121,7 +115,7 @@ const ALLOWED_URLS = [
 
   function normalizeUrl(u) {
     if (!u) return "";
-    return String(u).toLowerCase().trim().replace(/\\/$/, "");
+    return String(u).toLowerCase().trim().replace(/\/$/, "");
   }
 
   // Store data localized in tag: normalized site_url -> { site_url, brands }
@@ -524,13 +518,4 @@ const ALLOWED_URLS = [
       done(htmlStr || "");
     });
   });
-})();`;
-
-  return new Response(script, {
-    headers: {
-      "Content-Type": "application/javascript; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
-      "Access-Control-Allow-Origin": "*",
-    },
-  });
-}
+})();
