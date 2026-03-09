@@ -1,3 +1,7 @@
+const SUPABASE_URL = "https://qtdmojmizwncsmdspbgk.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZG1vam1penduY3NtZHNwYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU2ODcyNzcsImV4cCI6MjAyMTI2MzI3N30.XVcYZ50zyYUh4uHdGcBZaP0fumIt9vF58K_D4_G8sk4";
+
 (function () {
   console.log("[dyn-blog][init] Tag started");
 
@@ -122,8 +126,8 @@
     try {
       console.log("[dyn-blog][supabase-client] Creating client");
       var client = window.supabase.createClient(
-        "https://qtdmojmizwncsmdspbgk.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0ZG1vam1penduY3NtZHNwYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU2ODcyNzcsImV4cCI6MjAyMTI2MzI3N30.XVcYZ50zyYUh4uHdGcBZaP0fumIt9vF58K_D4_G8sk4",
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
       );
 
       console.log("[dyn-blog][query] Querying crm.seo_pages for slug:", slug);
