@@ -9,7 +9,7 @@ const ALLOWED_URLS = [
 ];
 
 (function () {
-  console.log("[sb-store-brands] Script started");
+  console.log("[sb-store-brands] Script started!");
   var current = String(window.location.href || "")
     .toLowerCase()
     .trim()
