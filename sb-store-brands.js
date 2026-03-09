@@ -5,6 +5,7 @@ const SUPABASE_ANON_KEY =
 const ALLOWED_URLS = [
   "https://www.murrayjeepram.ca/how-to-blog/",
   "https://www.murraychevrolet.ca/how-to-blog/",
+  "https://murraychevrolet.foxdealersites.com/how-to-blog",
 ];
 
 (function () {
